@@ -322,12 +322,55 @@ body{font-family:'Microsoft YaHei UI','Microsoft YaHei',Arial,sans-serif;height:
   .botnav button.active{color:#4caf50}
   .garden-area{flex:0 0 48%}
 }
+
+/* ── LOGIN ── */
+.login-mask{position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(160deg,#4fa8e0 0%,#7ec8f0 30%,#a8dda8 65%,#4fa040 100%);
+  display:flex;align-items:center;justify-content:center}
+.login-mask.hide{display:none}
+.login-box{background:rgba(255,255,255,.96);border-radius:28px;padding:38px 36px 32px;
+  width:320px;box-shadow:0 20px 60px rgba(0,80,0,.22);text-align:center;
+  animation:mop .4s cubic-bezier(.34,1.56,.64,1)}
+.login-icon{font-size:54px;line-height:1;margin-bottom:6px}
+.login-title{font-size:20px;font-weight:bold;color:#2d7a32;margin-bottom:4px}
+.login-sub{font-size:12px;color:#aaa;margin-bottom:22px}
+.login-field{width:100%;padding:11px 15px;border:2px solid #ddd;border-radius:14px;
+  font-size:14px;font-family:inherit;outline:none;transition:border-color .2s;
+  margin-bottom:12px;background:#fafafa}
+.login-field:focus{border-color:#4caf50;background:white}
+.login-btn{width:100%;padding:13px;border:none;border-radius:16px;font-size:15px;
+  font-family:inherit;font-weight:bold;cursor:pointer;margin-top:4px;
+  background:linear-gradient(135deg,#4caf50,#66bb6a);color:white;
+  box-shadow:0 4px 14px rgba(76,175,80,.42);transition:all .2s}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(76,175,80,.5)}
+.login-btn:active{transform:scale(.97)}
+.login-err{color:#e53935;font-size:12px;margin-top:8px;min-height:18px}
+.login-deco{position:absolute;font-size:28px;pointer-events:none;animation:bfly 7s ease-in-out infinite}
 </style>
 </head>
 <body>
 <div class="cwrap" id="cw"></div>
 
-<div class="layout">
+<!-- LOGIN SCREEN -->
+<div class="login-mask" id="login-mask">
+  <div class="login-deco" style="top:8%;left:12%">🦋</div>
+  <div class="login-deco" style="top:14%;right:16%;animation-delay:-3s">🌸</div>
+  <div class="login-deco" style="bottom:18%;left:20%;animation-delay:-1.5s;font-size:22px">🌿</div>
+  <div class="login-deco" style="bottom:12%;right:14%;animation-delay:-5s;font-size:22px">🌺</div>
+  <div class="login-box">
+    <div class="login-icon">🌸</div>
+    <div class="login-title">花园评价系统</div>
+    <div class="login-sub">请登录后使用</div>
+    <input class="login-field" id="l-user" type="text" placeholder="请输入账户" autocomplete="username"
+      onkeydown="if(event.key==='Enter')document.getElementById('l-pass').focus()">
+    <input class="login-field" id="l-pass" type="password" placeholder="请输入密码" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">🌿 登 入</button>
+    <div class="login-err" id="l-err"></div>
+  </div>
+</div>
+
+<div class="layout" id="main-layout" style="display:none">
 
 <!-- HEADER -->
 <header class="hdr">
@@ -1367,6 +1410,25 @@ function confetti(){
     p.style.animationDelay=Math.random()*.6+'s';
     p.style.animationDuration=(2+Math.random()*2)+'s';
     cw.appendChild(p);setTimeout(()=>p.remove(),4000);
+  }
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+const USERS=[{u:'叶',p:'123456'}];
+function doLogin(){
+  const u=document.getElementById('l-user').value.trim();
+  const p=document.getElementById('l-pass').value;
+  const err=document.getElementById('l-err');
+  if(USERS.some(x=>x.u===u&&x.p===p)){
+    document.getElementById('login-mask').classList.add('hide');
+    document.getElementById('main-layout').style.display='grid';
+  } else {
+    err.textContent='账户或密码错误，请重试';
+    document.getElementById('l-pass').value='';
+    document.getElementById('l-pass').focus();
+    setTimeout(()=>err.textContent='',2500);
   }
 }
 
