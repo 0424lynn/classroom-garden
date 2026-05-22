@@ -237,6 +237,19 @@ body{font-family:'Microsoft YaHei UI','Microsoft YaHei',Arial,sans-serif;height:
 .rkpgf{height:100%;border-radius:3px}
 .rksco{font-size:19px;font-weight:bold;text-align:right;flex-shrink:0}
 
+/* flower picker */
+.fl-pick{border:3px solid transparent;border-radius:14px;padding:7px 9px;cursor:pointer;
+  text-align:center;font-size:20px;transition:all .18s;background:white;
+  box-shadow:0 2px 7px rgba(0,0,0,.08)}
+.fl-pick:hover{transform:scale(1.1)}
+.fl-pick.sel{border-color:#4caf50;background:#f1f8e9;box-shadow:0 3px 12px rgba(76,175,80,.3)}
+.fl-pick-name{font-size:9px;color:#777;margin-top:2px}
+
+/* grade mini-tabs (reusable) */
+.gtab-sm{padding:5px 10px;border:2px solid #ddd;border-radius:12px;cursor:pointer;
+  font-size:12px;font-family:inherit;background:white;transition:all .18s}
+.gtab-sm.active{border-color:#4caf50;background:#e8f5e9;color:#2d7a32;font-weight:bold}
+
 /* quick score */
 .qs-hint{background:#e8f5e9;border-left:4px solid #4caf50;border-radius:0 10px 10px 0;
   padding:9px 13px;font-size:12px;color:#444;line-height:1.8;margin-bottom:8px}
@@ -518,8 +531,10 @@ body{font-family:'Microsoft YaHei UI','Microsoft YaHei',Arial,sans-serif;height:
     <div class="fv-card">
       <div class="fv-title">⚙️ 系统管理</div>
       <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="set-btn" onclick="openAddCls()">➕ 新增班级</button>
         <button class="set-btn" onclick="togPanel('p-import')">📋 批量导入学生名单</button>
         <button class="set-btn" onclick="togPanel('p-rename')">✏️ 修改年级/班级名称</button>
+        <button class="set-btn" onclick="togPanel('p-gsheet')">📊 Google 表格同步</button>
         <button class="set-btn" onclick="expJSON()">📤 导出数据备份</button>
         <button class="set-btn" onclick="impJSON()">📥 恢复数据备份</button>
         <button class="set-btn" style="color:#c62828" onclick="doReset()">🔄 重置全部数据</button>
@@ -541,6 +556,30 @@ body{font-family:'Microsoft YaHei UI','Microsoft YaHei',Arial,sans-serif;height:
     <div class="fv-card" id="p-rename" style="display:none">
       <div class="fv-title">✏️ 修改名称</div>
       <div id="p-rename-c"></div>
+    </div>
+    <div class="fv-card" id="p-gsheet" style="display:none">
+      <div class="fv-title">📊 Google 表格同步</div>
+      <div class="qs-hint">将全校学生花朵数据一键同步到你的 Google 表格，每个年级单独一个工作表。</div>
+      <div class="slbl">① 粘贴你的 Apps Script 网址</div>
+      <input class="inp2" id="gs-url" placeholder="https://script.google.com/macros/s/...">
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-g" style="flex:1" onclick="syncToGsheet()">🔄 立即同步</button>
+        <button class="btn btn-gr" onclick="togPanel('gs-howto')">❓ 如何设置</button>
+      </div>
+      <div id="gs-msg" style="margin-top:8px;font-size:12px;text-align:center"></div>
+      <div id="gs-howto" style="display:none;margin-top:14px">
+        <div class="slbl">② 设置步骤（只需做一次）</div>
+        <div class="qs-example" style="font-size:11px;line-height:2">
+1. 打开 <b>Google 表格</b>，新建一个空白表格<br>
+2. 点击菜单 <b>扩展程序 → Apps Script</b><br>
+3. 清空默认代码，粘贴下方代码<br>
+4. 点击 <b>部署 → 新建部署</b><br>
+5. 类型选 <b>网络应用</b>，访问权限选 <b>任何人</b><br>
+6. 复制生成的网址，粘贴到上方输入框</div>
+        <div class="slbl">③ 复制以下 Apps Script 代码</div>
+        <textarea class="ta2" style="min-height:220px;font-size:11px;font-family:monospace" readonly id="gs-code"></textarea>
+        <button class="btn btn-gr" style="margin-top:6px;width:100%" onclick="copyGsCode()">📋 复制代码</button>
+      </div>
     </div>
   </div>
 
@@ -578,6 +617,25 @@ body{font-family:'Microsoft YaHei UI','Microsoft YaHei',Arial,sans-serif;height:
 </aside>
 
 </div><!-- /layout -->
+
+<!-- Add Class Modal -->
+<div class="mbg" id="m-addcls">
+  <div class="mbox" style="max-width:380px">
+    <div class="mt2">➕ 新增班级</div>
+    <div class="slbl">选择年级</div>
+    <div id="acg-tabs" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px"></div>
+    <div class="slbl">班级显示名（如：四(1)班）</div>
+    <input class="inp2" id="ac-disp" placeholder="例：四(1)班" style="margin-bottom:8px">
+    <div class="slbl">班级简称（如：四1班）</div>
+    <input class="inp2" id="ac-short" placeholder="例：四1班" style="margin-bottom:8px">
+    <div class="slbl">选择花朵类型</div>
+    <div id="ac-flowers" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px"></div>
+    <div class="mbtn-row">
+      <button class="btn btn-g" onclick="doAddCls()">✅ 确认新增</button>
+      <button class="btn btn-gr" onclick="document.getElementById('m-addcls').classList.remove('on')">取消</button>
+    </div>
+  </div>
+</div>
 
 <!-- Mobile bottom nav -->
 <nav class="botnav">
@@ -1221,10 +1279,18 @@ document.getElementById('m-ren').addEventListener('click',function(e){if(e.targe
 // ============================================================
 function togPanel(id){
   const el=document.getElementById(id);
+  if(!el) return;
   const show=el.style.display==='none'||el.style.display==='';
   el.style.display=show?'block':'none';
   if(id==='p-import'&&show) buildImpPanel();
   if(id==='p-rename'&&show) buildRenPanel();
+  if(id==='p-gsheet'&&show){
+    const saved=localStorage.getItem('gs_url');
+    if(saved) document.getElementById('gs-url').value=saved;
+  }
+  if(id==='gs-howto'&&show){
+    document.getElementById('gs-code').value=GS_CODE;
+  }
 }
 
 let impGrade2='g1',impCls2=null;
@@ -1448,6 +1514,116 @@ function confetti(){
     cw.appendChild(p);setTimeout(()=>p.remove(),4000);
   }
 }
+
+// ============================================================
+// ADD CLASS
+// ============================================================
+const FLOWER_OPTS=[
+  {name:'向日葵',e:'🌻',c:'#FFC107',bg:'#FFF8E1'},
+  {name:'玫瑰', e:'🌹',c:'#E91E63',bg:'#FCE4EC'},
+  {name:'郁金香',e:'🌷',c:'#9C27B0',bg:'#F3E5F5'},
+  {name:'樱花', e:'🌸',c:'#FF4081',bg:'#FCE4EC'},
+  {name:'雏菊', e:'🌼',c:'#FF9800',bg:'#FFF3E0'},
+  {name:'莲花', e:'🪷',c:'#673AB7',bg:'#EDE7F6'},
+  {name:'百合', e:'💐',c:'#00796B',bg:'#E0F2F1'},
+  {name:'四叶草',e:'🍀',c:'#388E3C',bg:'#E8F5E9'},
+];
+let acGrade='g1', acFlower=FLOWER_OPTS[0];
+
+function openAddCls(){
+  acGrade=curGrade||'g1';
+  acFlower=FLOWER_OPTS[0];
+  // grade tabs
+  const gt=document.getElementById('acg-tabs');
+  gt.innerHTML='';
+  D.grades.forEach(g=>{
+    const b=document.createElement('button');
+    b.className='gtab-sm'+(g.id===acGrade?' active':'');
+    b.textContent=g.name;
+    b.onclick=()=>{acGrade=g.id;gt.querySelectorAll('.gtab-sm').forEach(x=>x.classList.remove('active'));b.classList.add('active');};
+    gt.appendChild(b);
+  });
+  // flower picker
+  const fp=document.getElementById('ac-flowers');
+  fp.innerHTML='';
+  FLOWER_OPTS.forEach((f,i)=>{
+    const d=document.createElement('div');
+    d.className='fl-pick'+(i===0?' sel':'');
+    d.innerHTML=`<div>${f.e}</div><div class="fl-pick-name">${f.name}</div>`;
+    d.onclick=()=>{fp.querySelectorAll('.fl-pick').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');acFlower=f;};
+    fp.appendChild(d);
+  });
+  document.getElementById('ac-disp').value='';
+  document.getElementById('ac-short').value='';
+  document.getElementById('m-addcls').classList.add('on');
+}
+
+function doAddCls(){
+  const disp=document.getElementById('ac-disp').value.trim();
+  const short=document.getElementById('ac-short').value.trim()||disp;
+  if(!disp){alert('请输入班级显示名');return;}
+  const g=gradeRef(acGrade);
+  const id=`${acGrade}cx${Date.now()}`;
+  const stus=[];
+  for(let i=1;i<=40;i++) stus.push({id:`${id}_s${i}`,name:`同学${String(i).padStart(2,'0')}`,flowers:0});
+  g.classes.push({id,name:`${g.name}${disp}`,disp,short,flower:acFlower,students:stus});
+  save();
+  document.getElementById('m-addcls').classList.remove('on');
+  renderGradeTabs();
+  alert(`✅ ${disp} 新增成功！`);
+}
+
+// ============================================================
+// GOOGLE SHEETS SYNC
+// ============================================================
+const GS_CODE=`function doPost(e){
+  try{
+    var data=JSON.parse(e.postData.contents);
+    var ss=SpreadsheetApp.getActiveSpreadsheet();
+    data.grades.forEach(function(grade){
+      var sh=ss.getSheetByName(grade.name);
+      if(!sh) sh=ss.insertSheet(grade.name);
+      sh.clearContents();
+      sh.appendRow(['排名','班级','姓名','花朵数','植物']);
+      sh.getRange(1,1,1,5).setFontWeight('bold').setBackground('#c6efce');
+      var rows=[];
+      grade.classes.forEach(function(cls){
+        cls.students.forEach(function(s){
+          rows.push([cls.disp,s.name,s.flowers]);
+        });
+      });
+      rows.sort(function(a,b){return b[2]-a[2];});
+      rows.forEach(function(r,i){
+        var plant=r[2]===0?'🌱':r[2]<5?'🌿':r[2]<15?'🌷':r[2]<30?'🌸':r[2]<50?'🌺':'🌻';
+        sh.appendRow([i+1,r[0],r[1],r[2],plant]);
+      });
+    });
+    return ContentService.createTextOutput(JSON.stringify({ok:true}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }catch(err){
+    return ContentService.createTextOutput(JSON.stringify({ok:false,error:err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+
+function syncToGsheet(){
+  const url=document.getElementById('gs-url').value.trim();
+  const msg=document.getElementById('gs-msg');
+  if(!url){msg.innerHTML='<span style="color:#c62828">请先输入 Apps Script 网址</span>';return;}
+  msg.innerHTML='⏳ 同步中...';
+  const payload={grades:D.grades.map(g=>({name:g.name,classes:g.classes.map(c=>({disp:c.disp,students:c.students}))}))};
+  fetch(url,{method:'POST',mode:'no-cors',body:JSON.stringify(payload),headers:{'Content-Type':'application/json'}})
+    .then(()=>{
+      msg.innerHTML='<span style="color:#2d7a32">✅ 已发送！请打开 Google 表格查看数据（数秒后刷新）</span>';
+      localStorage.setItem('gs_url',url);
+    })
+    .catch(err=>{msg.innerHTML=`<span style="color:#c62828">❌ 发送失败: ${err.message}</span>`;});
+}
+
+function copyGsCode(){
+  navigator.clipboard.writeText(GS_CODE).then(()=>alert('✅ 代码已复制！'));
+}
+
 
 // ============================================================
 // MOBILE DETAIL TABS
