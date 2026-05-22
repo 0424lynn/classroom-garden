@@ -1285,8 +1285,8 @@ function togPanel(id){
   if(id==='p-import'&&show) buildImpPanel();
   if(id==='p-rename'&&show) buildRenPanel();
   if(id==='p-gsheet'&&show){
-    const saved=localStorage.getItem('gs_url');
-    if(saved) document.getElementById('gs-url').value=saved;
+    const saved=localStorage.getItem('gs_url')||GS_DEFAULT_URL;
+    document.getElementById('gs-url').value=saved;
   }
   if(id==='gs-howto'&&show){
     document.getElementById('gs-code').value=GS_CODE;
@@ -1606,8 +1606,11 @@ const GS_CODE=`function doPost(e){
   }
 }`;
 
+const GS_DEFAULT_URL='https://script.google.com/macros/s/AKfycbwgZtUOi7XyqOBoDFk0JKETpPzSiF8OqeHonEE_uzK5ONFHRRyvavQn099D-52PJg9O/exec';
 function syncToGsheet(){
-  const url=document.getElementById('gs-url').value.trim();
+  const inp=document.getElementById('gs-url');
+  if(!inp.value.trim()) inp.value=GS_DEFAULT_URL;
+  const url=inp.value.trim();
   const msg=document.getElementById('gs-msg');
   if(!url){msg.innerHTML='<span style="color:#c62828">请先输入 Apps Script 网址</span>';return;}
   msg.innerHTML='⏳ 同步中...';
