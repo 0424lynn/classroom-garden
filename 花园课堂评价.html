@@ -563,15 +563,24 @@ body{font-family:'Microsoft YaHei UI','Microsoft YaHei',Arial,sans-serif;height:
       <div id="p-rename-c"></div>
     </div>
     <div class="fv-card" id="p-gsheet" style="display:none">
-      <div class="fv-title">📊 Google 表格同步</div>
-      <div class="qs-hint">将全校学生花朵数据一键同步到你的 Google 表格，每个年级单独一个工作表。</div>
-      <div class="slbl">① 粘贴你的 Apps Script 网址</div>
-      <input class="inp2" id="gs-url" placeholder="https://script.google.com/macros/s/...">
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn btn-g" style="flex:1" onclick="syncToGsheet()">🔄 立即同步</button>
-        <button class="btn btn-gr" onclick="togPanel('gs-howto')">❓ 如何设置</button>
+      <div class="fv-title">📊 云端 Google 表格</div>
+      <div class="qs-hint">
+        ☁️ <b>改名/加分后自动推送到云端</b>（右上角图标显示同步状态）<br>
+        ⬇️ <b>点击「从云端同步」</b>可把另一台电脑的最新数据拉到本机
       </div>
-      <div id="gs-msg" style="margin-top:8px;font-size:12px;text-align:center"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-g" style="flex:1;font-size:14px" onclick="manualPull()">⬇️ 从云端同步到本机</button>
+        <button class="btn btn-gr" style="font-size:13px" onclick="pushToCloud()">⬆️ 立即推送到云端</button>
+      </div>
+      <div id="gs-msg" style="margin-top:10px;font-size:12px;text-align:center;color:#888">
+        改名、加分后系统会在 3 秒内自动推送，无需手动操作
+      </div>
+      <div class="slbl" style="margin-top:14px">Apps Script 网址（已配置）</div>
+      <input class="inp2" id="gs-url" placeholder="https://script.google.com/macros/s/..." style="font-size:11px">
+      <div style="margin-top:8px">
+        <button class="btn btn-gr" style="width:100%;font-size:12px" onclick="togPanel('gs-howto')">❓ 查看设置说明</button>
+      </div>
+      <div id="gs-msg2" style="margin-top:8px;font-size:12px;text-align:center"></div>
       <div id="gs-howto" style="display:none;margin-top:14px">
         <div class="slbl">② 设置步骤（只需做一次）</div>
         <div class="qs-example" style="font-size:11px;line-height:2">
@@ -1730,6 +1739,14 @@ function manualSync(){
   if(cloudTimer)clearTimeout(cloudTimer);
   pushToCloud();
   setTimeout(()=>pullFromCloud(),1500);
+}
+function manualPull(){
+  const msg=document.getElementById('gs-msg2');
+  if(msg) msg.innerHTML='⏳ 正在从云端拉取...';
+  pullFromCloud(()=>{
+    if(msg) msg.innerHTML='✅ 同步完成';
+    setTimeout(()=>{if(msg)msg.innerHTML='';},3000);
+  });
 }
 
 // ============================================================
