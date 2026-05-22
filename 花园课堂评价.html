@@ -309,6 +309,10 @@ body{font-family:'Microsoft YaHei UI','Microsoft YaHei',Arial,sans-serif;height:
 .pg-score{font-size:14px;font-weight:bold;margin-top:3px}
 
 /* mobile */
+.det-mtabs{display:none;gap:0;background:white;border-bottom:1px solid #e0f0e0;flex-shrink:0}
+.dmtab{flex:1;padding:9px 4px;border:none;background:transparent;font-size:12px;
+  font-family:inherit;color:#999;cursor:pointer;border-bottom:3px solid transparent;transition:all .18s}
+.dmtab.active{color:#2d7a32;border-bottom-color:#4caf50;font-weight:bold}
 .botnav{display:none;position:fixed;bottom:0;left:0;right:0;background:white;
   border-top:1px solid #ddd;z-index:98;padding:2px 0}
 @media(max-width:800px){
@@ -318,9 +322,36 @@ body{font-family:'Microsoft YaHei UI','Microsoft YaHei',Arial,sans-serif;height:
   .botnav button{flex:1;padding:7px 3px 5px;border:none;background:transparent;
     font-size:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;
     font-family:inherit;color:#777}
-  .botnav button .bni{font-size:18px}
+  .botnav button .bni{font-size:20px}
   .botnav button.active{color:#4caf50}
-  .garden-area{flex:0 0 48%}
+
+  /* garden */
+  .garden-area{flex:0 0 42%}
+  .patches-row{gap:10px;width:94%}
+  .gpatch{max-width:28vw}
+  .povl{width:22vw;height:17vw;min-width:88px;min-height:70px}
+  .psign{padding:4px 8px 3px}
+  .psign-cls{font-size:10px}
+  .psign-fl{font-size:9px}
+  .pbadge{font-size:11px;padding:2px 8px;margin-top:6px}
+
+  /* detail: switch to tab layout */
+  .det-mtabs{display:flex}
+  .det-cols{flex-direction:column!important;overflow-y:auto}
+  .col-stu,.col-awd,.col-rec{display:none!important;flex:unset;border:none;width:100%;min-height:0}
+  .col-stu.mob-active,.col-awd.mob-active,.col-rec.mob-active{display:flex!important;flex:1}
+  .sgrid{grid-template-columns:repeat(auto-fill,minmax(64px,1fr));max-height:none}
+  .agrid{grid-template-columns:repeat(5,1fr)}
+  .scard{padding:7px 3px}
+  .savatar{font-size:20px}
+
+  /* full views */
+  .fv{padding:8px 8px 60px}
+  .fv-card{padding:13px 12px}
+  .pg-grid{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}
+
+  /* login */
+  .login-box{width:88vw;padding:28px 20px 22px}
 }
 
 /* ── LOGIN ── */
@@ -426,8 +457,13 @@ body{font-family:'Microsoft YaHei UI','Microsoft YaHei',Arial,sans-serif;height:
           <div class="det-hdr-sub">选择班级后即可查看学生 · 奖励花朵 · 评价记录</div>
         </div>
       </div>
+      <div class="det-mtabs" id="det-mtabs">
+        <button class="dmtab active" onclick="switchDetTab('stu',this)">👧 学生</button>
+        <button class="dmtab" onclick="switchDetTab('awd',this)">🌸 奖励</button>
+        <button class="dmtab" onclick="switchDetTab('rec',this)">📋 记录</button>
+      </div>
       <div class="det-cols" id="det-cols" style="display:none">
-        <div class="col-stu">
+        <div class="col-stu mob-active">
           <div class="coltit">
             <span>👧 班级学生</span>
             <span id="sel-cnt" style="font-size:10px;color:#bbb;margin-left:4px">0人已选</span>
@@ -1411,6 +1447,16 @@ function confetti(){
     p.style.animationDuration=(2+Math.random()*2)+'s';
     cw.appendChild(p);setTimeout(()=>p.remove(),4000);
   }
+}
+
+// ============================================================
+// MOBILE DETAIL TABS
+// ============================================================
+function switchDetTab(t,btn){
+  document.querySelectorAll('.col-stu,.col-awd,.col-rec').forEach(el=>el.classList.remove('mob-active'));
+  document.querySelectorAll('.dmtab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.col-'+t).classList.add('mob-active');
+  if(btn) btn.classList.add('active');
 }
 
 // ============================================================
