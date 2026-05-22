@@ -25,6 +25,10 @@ body{font-family:'Microsoft YaHei UI','Microsoft YaHei',Arial,sans-serif;height:
 .hdr-badge{background:rgba(255,255,255,.22);padding:4px 12px;border-radius:20px;font-size:11px}
 .hdr-gear{cursor:pointer;font-size:18px;opacity:.9}
 .hdr-gear:hover{opacity:1}
+.sync-btn{cursor:pointer;font-size:18px;opacity:.9;transition:all .3s;user-select:none}
+.sync-btn:hover{opacity:1;transform:scale(1.15)}
+.sync-btn.spinning{display:inline-block;animation:syncSpin 1s linear infinite}
+@keyframes syncSpin{to{transform:rotate(360deg)}}
 
 /* ── SIDEBAR ── */
 .sidebar{background:linear-gradient(180deg,#f5fef5,#edf9ed);border-right:1px solid #c8e6c9;
@@ -425,6 +429,7 @@ body{font-family:'Microsoft YaHei UI','Microsoft YaHei',Arial,sans-serif;height:
   <div class="hdr-mid">🌿 用心绽放 · 收获成长 🌿</div>
   <div class="hdr-right">
     <span class="hdr-badge" id="hdr-badge">全校总览</span>
+    <span class="sync-btn" id="sync-btn" onclick="manualSync()" title="点击手动同步">☁️</span>
     <span>👨‍🏫 老师</span>
     <span class="hdr-gear" onclick="switchNav('settings')">⚙️</span>
   </div>
@@ -788,7 +793,11 @@ function fixData(){
   D.grades.sort((a,b)=>CFG.findIndex(x=>x.gradeId===a.id)-CFG.findIndex(x=>x.gradeId===b.id));
   save();
 }
-function save(){localStorage.setItem('fca_v4',JSON.stringify(D));}
+function save(){
+  D.lastModified=Date.now();
+  localStorage.setItem('fca_v4',JSON.stringify(D));
+  scheduleCloudPush();
+}
 
 // ============================================================
 // HELPERS
@@ -1658,6 +1667,72 @@ function doLogin(){
 }
 
 // ============================================================
+// CLOUD SYNC
+// ============================================================
+let cloudTimer=null;
+
+function setSyncIcon(state){
+  const b=document.getElementById('sync-btn');
+  if(!b)return;
+  const icons={synced:'☁️',syncing:'🔄',error:'⚠️',pending:'💾',offline:'📴'};
+  const tips={synced:'已同步到云端',syncing:'同步中...',error:'同步失败，点击重试',pending:'有未同步更改，将自动保存',offline:'无法连接云端'};
+  b.textContent=icons[state]||'☁️';
+  b.title=tips[state]||'';
+  b.classList.toggle('spinning',state==='syncing');
+}
+
+function showToast(msg,dur=3000){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;top:66px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.76);color:white;padding:9px 22px;border-radius:22px;font-size:13px;z-index:99999;white-space:nowrap;pointer-events:none';
+  t.textContent=msg;document.body.appendChild(t);
+  setTimeout(()=>t.remove(),dur);
+}
+
+function pullFromCloud(onDone){
+  if(!GS_DEFAULT_URL||GS_DEFAULT_URL.includes('YOUR')){if(onDone)onDone();return;}
+  setSyncIcon('syncing');
+  const cb='_gscb_'+Date.now();
+  const timer=setTimeout(()=>{delete window[cb];setSyncIcon('offline');if(onDone)onDone();},9000);
+  window[cb]=function(cloudData){
+    clearTimeout(timer);delete window[cb];
+    if(cloudData&&cloudData.grades){
+      const localTime=D.lastModified||0;
+      const cloudTime=cloudData.lastModified||0;
+      if(cloudTime>localTime){
+        D=cloudData;fixData();
+        localStorage.setItem('fca_v4',JSON.stringify(D));
+        initRender();showToast('✅ 已从云端同步最新数据');
+      }
+    }
+    setSyncIcon('synced');if(onDone)onDone();
+  };
+  const s=document.createElement('script');
+  s.src=`${GS_DEFAULT_URL}?cb=${cb}&t=${Date.now()}`;
+  s.onerror=()=>{clearTimeout(timer);delete window[cb];setSyncIcon('offline');if(onDone)onDone();};
+  document.head.appendChild(s);
+}
+
+function pushToCloud(){
+  if(!GS_DEFAULT_URL||GS_DEFAULT_URL.includes('YOUR')){setSyncIcon('offline');return;}
+  setSyncIcon('syncing');
+  fetch(GS_DEFAULT_URL,{method:'POST',mode:'no-cors',body:JSON.stringify(D),headers:{'Content-Type':'application/json'}})
+    .then(()=>setSyncIcon('synced'))
+    .catch(()=>setSyncIcon('error'));
+}
+
+function scheduleCloudPush(){
+  setSyncIcon('pending');
+  if(cloudTimer)clearTimeout(cloudTimer);
+  cloudTimer=setTimeout(pushToCloud,3000);
+}
+
+function manualSync(){
+  if(cloudTimer)clearTimeout(cloudTimer);
+  pushToCloud();
+  setTimeout(()=>pullFromCloud(),1500);
+}
+
+// ============================================================
 // BOOT
 // ============================================================
 function initRender(){
@@ -1667,6 +1742,8 @@ function initRender(){
 }
 initData();
 initRender();
+// pull latest data from cloud on startup
+setTimeout(()=>pullFromCloud(),800);
 </script>
 </body>
 </html>
